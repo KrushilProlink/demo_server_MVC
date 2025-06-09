@@ -1,10 +1,16 @@
 const Employee = require('../models/Employee')
 const mongoose = require("mongoose");
 
+const generateEmpId = async () => {
+    const employees = await Employee.find()
+    const employeeId = employees?.length + 1
+    return employeeId;
+}
+
 const getAll = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10; 
+        const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
         const query = { createdBy: new mongoose.Types.ObjectId(req.user._id) };
@@ -37,6 +43,8 @@ const addOne = async (req, res) => {
         if (req.user && req.user._id) {
             result.createdBy = req.user._id;
         }
+
+        result.employeeId = generateEmpId();
         await result.save();
         res.status(200).json({ success: true, message: "Employee saved successfully", data: result, });
 
@@ -47,7 +55,7 @@ const addOne = async (req, res) => {
 };
 const getOne = async (req, res) => {
     try {
-        let result = await Employee.findOne({ barcode: req.body.barcode });
+        let result = await Employee.findOne({ _id: req.params.id });
         if (!result) {
             return res.status(404).json({ success: false, message: "Employee not found" })
         }
